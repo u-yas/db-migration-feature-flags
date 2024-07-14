@@ -42,14 +42,12 @@ func getUser(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	// Feature flagの状態を確認
 	var isEnabled bool
 	err = tx.QueryRow("SELECT enabled FROM feature_flags WHERE name = 'users_name_to_display_name' FOR UPDATE").Scan(&isEnabled)
 	if err != nil {
 		return err
 	}
 
-	// 3. Feature flagに基づいて適切なコードを実行
 	if isEnabled {
 		result, err := tx.Query("SELECT id,display_name,age FROM users")
 		if err != nil {
@@ -71,7 +69,6 @@ func getUser(db *sql.DB) error {
 			fmt.Println("新しい")
 		}
 	} else {
-		// 古いテーブル構造を使用するコード
 		result, err := tx.Query("SELECT id,name,age FROM users")
 		if err != nil {
 			tx.Rollback()
