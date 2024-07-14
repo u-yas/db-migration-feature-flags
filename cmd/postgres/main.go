@@ -28,30 +28,33 @@ func main() {
 
 	// 0.1秒間隔でgetUserを実行する
 	for {
-		err := getUser(db)
+		tx, err := db.Begin()
 		if err != nil {
 			log.Fatal(err)
+		}
+		err = getUser(tx)
+		tx.Commit()
+
+		if err != nil {
+			log.Fatal(err)
+
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 
 }
 
-func getUser(db *sql.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
+func getUser(tx *sql.Tx) error {
+
 	var isEnabled bool
-	err = tx.QueryRow("SELECT enabled FROM feature_flags WHERE name = 'users_name_to_display_name' FOR UPDATE").Scan(&isEnabled)
+	err := tx.QueryRow("SELECT enabled FROM feature_flags WHERE name = 'users_name_to_display_name' FOR UPDATE").Scan(&isEnabled)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
 
 	if isEnabled {
-		result, err := db.Query("SELECT id,display_name,age FROM users")
+		result, err := tx.Query("SELECT id,display_name,age FROM users")
 		if err != nil {
 			return err
 		}
@@ -69,7 +72,7 @@ func getUser(db *sql.DB) error {
 			fmt.Println("新しい")
 		}
 	} else {
-		result, err := db.Query("SELECT id,name,age FROM users")
+		result, err := tx.Query("SELECT id,name,age FROM users")
 		if err != nil {
 			return err
 		}
@@ -85,7 +88,7 @@ func getUser(db *sql.DB) error {
 			}
 			fmt.Println("古い")
 		}
-
 	}
+
 	return nil
 }
