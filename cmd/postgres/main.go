@@ -45,13 +45,14 @@ func getUser(db *sql.DB) error {
 	var isEnabled bool
 	err = tx.QueryRow("SELECT enabled FROM feature_flags WHERE name = 'users_name_to_display_name' FOR UPDATE").Scan(&isEnabled)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
+	tx.Commit()
 
 	if isEnabled {
-		result, err := tx.Query("SELECT id,display_name,age FROM users")
+		result, err := db.Query("SELECT id,display_name,age FROM users")
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 		defer result.Close()
@@ -62,16 +63,14 @@ func getUser(db *sql.DB) error {
 			var age int
 			err := result.Scan(&id, &displayName, &age)
 			if err != nil {
-				tx.Rollback()
 				return err
 			}
 
 			fmt.Println("新しい")
 		}
 	} else {
-		result, err := tx.Query("SELECT id,name,age FROM users")
+		result, err := db.Query("SELECT id,name,age FROM users")
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 		defer result.Close()
@@ -82,13 +81,11 @@ func getUser(db *sql.DB) error {
 			var age int
 			err := result.Scan(&id, &name, &age)
 			if err != nil {
-				tx.Rollback()
 				return err
 			}
 			fmt.Println("古い")
 		}
 
 	}
-	tx.Commit()
 	return nil
 }
