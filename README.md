@@ -1,5 +1,4 @@
-https://zenn.dev/articles/781f4f8a16c3cf
-
+https://zenn.dev/uyas/articles/781f4f8a16c3cf
 
 # postgres
 成功
